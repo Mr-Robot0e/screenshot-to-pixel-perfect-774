@@ -30,11 +30,19 @@ export function IntroSeal({ onDone }: { onDone: () => void }) {
     }
     setActive(true);
 
+    // Guard: the choreography must not start after the intro has been
+    // dismissed (skip) or unmounted — refs would be null.
+    let cancelled = false;
+
     // Preload the hero artwork before starting the choreography.
     const img = new Image();
     const heroUrl = coverRef.current?.dataset.hero ?? "";
     const start = () => {
-      requestAnimationFrame(() => runTimeline());
+      if (cancelled) return;
+      requestAnimationFrame(() => {
+        if (cancelled) return;
+        runTimeline();
+      });
     };
     if (heroUrl) {
       img.onload = start;
@@ -45,6 +53,16 @@ export function IntroSeal({ onDone }: { onDone: () => void }) {
     }
 
     function runTimeline() {
+      if (
+        cancelled ||
+        !rootRef.current ||
+        !sealRef.current ||
+        !coverRef.current ||
+        !lightRef.current ||
+        !darkRef.current
+      ) {
+        return;
+      }
       const ctx = gsap.context(() => {
         const tl = gsap.timeline({
           defaults: { ease: "power2.inOut" },
@@ -97,8 +115,8 @@ export function IntroSeal({ onDone }: { onDone: () => void }) {
 
         tl.addLabel("separate", "+=0");
         tl.addLabel("aperture", "separate+=1.3");
+        (rootRef.current as any).__tl = tl;
       }, rootRef);
-      (rootRef.current as any).__tl = tl;
     }
 
     function finish() {
@@ -110,6 +128,12 @@ export function IntroSeal({ onDone }: { onDone: () => void }) {
       setActive(false);
       onDone();
     }
+
+    return () => {
+      cancelled = true;
+      img.onload = null;
+      img.onerror = null;
+    };
   }, [onDone]);
 
   const skip = () => {
