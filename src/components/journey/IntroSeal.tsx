@@ -128,6 +128,12 @@ export function IntroSeal({ onDone }: { onDone: () => void }) {
       setActive(false);
       onDone();
     }
+
+    return () => {
+      cancelled = true;
+      img.onload = null;
+      img.onerror = null;
+    };
   }, [onDone]);
 
   const skip = () => {
