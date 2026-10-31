@@ -97,8 +97,8 @@ export function IntroSeal({ onDone }: { onDone: () => void }) {
 
         tl.addLabel("separate", "+=0");
         tl.addLabel("aperture", "separate+=1.3");
+        (rootRef.current as any).__tl = tl;
       }, rootRef);
-      (rootRef.current as any).__tl = tl;
     }
 
     function finish() {
